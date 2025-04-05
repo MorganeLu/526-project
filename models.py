@@ -12,6 +12,7 @@ import lightgbm as lgb
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 from imblearn.over_sampling import SMOTE
+from sklearn.model_selection import GridSearchCV
 
 
 # LGB
@@ -105,13 +106,57 @@ def train_logistic_l2_models(subsets, X_test):
 
         # 交叉验证
         cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='roc_auc')
-        print(f"✅ L2 模型 {i+1} AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
+        print(f"L2 模型 {i+1} AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
 
         # 模型训练与预测
         model.fit(X_train_scaled, y_train)
         proba = model.predict_proba(X_test_scaled)[:, 1]
 
         models.append(model)
+        scalers.append(scaler)
+        test_preds.append(proba)
+
+    return models, scalers, test_preds
+
+def train_logistic_l2_models_tune(subsets, X_test):
+    test_preds = []
+    models = []
+    scalers = []
+
+    # L2正则化模型的参数范围（调节C值）
+    param_grid = {'C': [0.01, 0.1, 1, 10, 100]}
+
+    for i, (X_train, y_train) in enumerate(subsets):
+        print(f"\n 训练 L2 Logistic Regression 模型 {i+1}（无 SMOTE）")
+
+        # 标准化
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # 创建 Logistic Regression 模型（不指定C）
+        model = LogisticRegression(
+            penalty='l2',
+            solver='liblinear',  # 使用liblinear进行优化
+            max_iter=1000
+        )
+
+        # 使用 GridSearchCV 调参
+        grid_search = GridSearchCV(model, param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
+        grid_search.fit(X_train_scaled, y_train)
+
+        # 打印最佳参数和最佳得分
+        print(f"最佳参数: {grid_search.best_params_}")
+        print(f"最佳 AUC-ROC: {grid_search.best_score_:.4f}")
+
+        # 训练得到的最佳模型
+        best_model = grid_search.best_estimator_
+
+        # 预测
+        proba = best_model.predict_proba(X_test_scaled)[:, 1]
+
+        # 保存模型、scaler和预测结果
+        models.append(best_model)
         scalers.append(scaler)
         test_preds.append(proba)
 
@@ -152,6 +197,49 @@ def train_logistic_l1_models(subsets, X_test):
 
     return models, scalers, test_preds
 
+def train_logistic_l1_models_tune(subsets, X_test):
+    test_preds = []
+    models = []
+    scalers = []
+
+    # L1正则化模型的参数范围（调节C值）
+    param_grid = {'C': [0.01, 0.1, 1, 10, 100]}
+
+    for i, (X_train, y_train) in enumerate(subsets):
+        print(f"\n 训练 L1 Logistic Regression 模型 {i+1}（无 SMOTE）")
+
+        # 标准化
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # 创建 Logistic Regression 模型（不指定C）
+        model = LogisticRegression(
+            penalty='l1',
+            solver='liblinear',  # 使用liblinear进行优化
+            max_iter=1000
+        )
+
+        # 使用 GridSearchCV 调参
+        grid_search = GridSearchCV(model, param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
+        grid_search.fit(X_train_scaled, y_train)
+
+        # 打印最佳参数和最佳得分
+        print(f"best lamda: {grid_search.best_params_}")
+        print(f"best AUC-ROC: {grid_search.best_score_:.4f}")
+
+        # 训练得到的最佳模型
+        best_model = grid_search.best_estimator_
+
+        # 预测
+        proba = best_model.predict_proba(X_test_scaled)[:, 1]
+
+        # 保存模型、scaler和预测结果
+        models.append(best_model)
+        scalers.append(scaler)
+        test_preds.append(proba)
+
+    return models, scalers, test_preds
 
 def train_logistic_models_with_smote(subsets, X_test):
     test_preds = []
