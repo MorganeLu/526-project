@@ -17,13 +17,13 @@ from sklearn.model_selection import GridSearchCV
 
 # LGB
 def train_lightgbm_models(subsets, X_test):
-    test_preds = []  # 存储每个模型的预测概率
-    models = []      # 存储模型本身
+    test_preds = []
+    models = []
 
     for i, (X_train, y_train) in enumerate(subsets):
-        print(f"\n =========================================Start training LightGBM model {i+1}=======================================")
+        print(f"\n =======================================Start training LightGBM model {i+1}=======================================")
 
-        # 初始化 LightGBM 模型
+        # init
         model = lgb.LGBMClassifier(
             n_estimators=100,
             learning_rate=0.1,
@@ -32,15 +32,13 @@ def train_lightgbm_models(subsets, X_test):
             objective="binary"
         )
 
-        # 执行 5 折交叉验证评估
+        # 5-fold CV
         cv_scores = cross_val_score(model, X_train, y_train, cv=5, scoring='roc_auc')
         print(f" model {i+1} - AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
 
-        # 用完整子集数据重新训练
         model.fit(X_train, y_train)
         models.append(model)
 
-        # 在测试集上预测（正类概率）
         proba = model.predict_proba(X_test)[:, 1]
         test_preds.append(proba)
 
@@ -54,26 +52,23 @@ def train_logistic_models(subsets, X_test):
     scalers = []
 
     for i, (X_train, y_train) in enumerate(subsets):
-        print(f"\n 训练 L2 Logistic Regression 模型 {i+1}...")
+        print(f"\n Training L2 Logistic Regression Model {i+1}...")
 
-        # 标准化数据
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
 
-        # 创建模型（L2 正则）
         model = LogisticRegression(
             penalty='l2',
             C=1.0,
-            solver='liblinear',  # 支持 L1/L2 且稳定
+            solver='liblinear',
             max_iter=1000
         )
 
-        # 交叉验证评估
+        # CV
         cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='roc_auc')
-        print(f" 模型 {i+1} 的 5 折 AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
+        print(f" Model {i+1} 5-fold AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
 
-        # 拟合并预测
         model.fit(X_train_scaled, y_train)
         proba = model.predict_proba(X_test_scaled)[:, 1]
 
@@ -89,14 +84,12 @@ def train_logistic_l2_models(subsets, X_test):
     scalers = []
 
     for i, (X_train, y_train) in enumerate(subsets):
-        print(f"\n🔄 训练 L2 Logistic Regression 模型 {i+1}（无 SMOTE）")
+        print(f"\nTraining L2 Logistic Regression Model {i+1}")
 
-        # 标准化
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
 
-        # 构建模型
         model = LogisticRegression(
             penalty='l2',
             C=1.0,
@@ -104,11 +97,9 @@ def train_logistic_l2_models(subsets, X_test):
             max_iter=1000
         )
 
-        # 交叉验证
         cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='roc_auc')
-        print(f"L2 模型 {i+1} AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
+        print(f"L2 Model {i+1} AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
 
-        # 模型训练与预测
         model.fit(X_train_scaled, y_train)
         proba = model.predict_proba(X_test_scaled)[:, 1]
 
@@ -123,39 +114,30 @@ def train_logistic_l2_models_tune(subsets, X_test):
     models = []
     scalers = []
 
-    # L2正则化模型的参数范围（调节C值）
     param_grid = {'C': [0.01, 0.1, 1, 10, 100]}
 
     for i, (X_train, y_train) in enumerate(subsets):
-        print(f"\n 训练 L2 Logistic Regression 模型 {i+1}（无 SMOTE）")
+        print(f"\nTraining L2 Logistic Regression Model {i+1} with tune")
 
-        # 标准化
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
 
-        # 创建 Logistic Regression 模型（不指定C）
         model = LogisticRegression(
             penalty='l2',
-            solver='liblinear',  # 使用liblinear进行优化
+            solver='liblinear', 
             max_iter=1000
         )
 
-        # 使用 GridSearchCV 调参
         grid_search = GridSearchCV(model, param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
         grid_search.fit(X_train_scaled, y_train)
 
-        # 打印最佳参数和最佳得分
-        print(f"最佳参数: {grid_search.best_params_}")
-        print(f"最佳 AUC-ROC: {grid_search.best_score_:.4f}")
+        print(f"Best params: {grid_search.best_params_}")
+        print(f"Best AUC-ROC: {grid_search.best_score_:.4f}")
 
-        # 训练得到的最佳模型
         best_model = grid_search.best_estimator_
-
-        # 预测
         proba = best_model.predict_proba(X_test_scaled)[:, 1]
 
-        # 保存模型、scaler和预测结果
         models.append(best_model)
         scalers.append(scaler)
         test_preds.append(proba)
@@ -168,14 +150,12 @@ def train_logistic_l1_models(subsets, X_test):
     scalers = []
 
     for i, (X_train, y_train) in enumerate(subsets):
-        print(f"\n训练 L1 Logistic Regression 模型 {i+1}（无 SMOTE）")
+        print(f"\nTraining L1 Logistic Regression Model {i+1}")
 
-        # 标准化
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
 
-        # 构建模型
         model = LogisticRegression(
             penalty='l1',
             C=1.0,
@@ -183,11 +163,9 @@ def train_logistic_l1_models(subsets, X_test):
             max_iter=1000
         )
 
-        # 交叉验证
         cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='roc_auc')
-        print(f"L1 模型 {i+1} AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
+        print(f"L1 Model {i+1} AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
 
-        # 模型训练与预测
         model.fit(X_train_scaled, y_train)
         proba = model.predict_proba(X_test_scaled)[:, 1]
 
@@ -202,39 +180,30 @@ def train_logistic_l1_models_tune(subsets, X_test):
     models = []
     scalers = []
 
-    # L1正则化模型的参数范围（调节C值）
     param_grid = {'C': [0.01, 0.1, 1, 10, 100]}
 
     for i, (X_train, y_train) in enumerate(subsets):
-        print(f"\n 训练 L1 Logistic Regression 模型 {i+1}（无 SMOTE）")
+        print(f"\nTraining L1 Logistic Regression Model{i+1} with tune")
 
-        # 标准化
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
 
-        # 创建 Logistic Regression 模型（不指定C）
         model = LogisticRegression(
             penalty='l1',
-            solver='liblinear',  # 使用liblinear进行优化
+            solver='liblinear',
             max_iter=1000
         )
 
-        # 使用 GridSearchCV 调参
         grid_search = GridSearchCV(model, param_grid, cv=5, scoring='roc_auc', n_jobs=-1)
         grid_search.fit(X_train_scaled, y_train)
 
-        # 打印最佳参数和最佳得分
         print(f"best lamda: {grid_search.best_params_}")
         print(f"best AUC-ROC: {grid_search.best_score_:.4f}")
 
-        # 训练得到的最佳模型
         best_model = grid_search.best_estimator_
-
-        # 预测
         proba = best_model.predict_proba(X_test_scaled)[:, 1]
 
-        # 保存模型、scaler和预测结果
         models.append(best_model)
         scalers.append(scaler)
         test_preds.append(proba)
@@ -247,18 +216,15 @@ def train_logistic_models_with_smote(subsets, X_test):
     scalers = []
 
     for i, (X_train, y_train) in enumerate(subsets):
-        print(f"\n训练 L2 Logistic Regression 模型 {i+1}（使用 SMOTE）")
+        print(f"\nTraining L2 Logistic Regression Model {i+1} with SMOTE")
 
-        # 使用 SMOTE 过采样
         smote = SMOTE(random_state=42)
         X_resampled, y_resampled = smote.fit_resample(X_train, y_train)
 
-        # 标准化
         scaler = StandardScaler()
         X_resampled_scaled = scaler.fit_transform(X_resampled)
         X_test_scaled = scaler.transform(X_test)
 
-        # 创建并训练模型
         model = LogisticRegression(
             penalty='l2',
             C=1.0,
@@ -266,11 +232,9 @@ def train_logistic_models_with_smote(subsets, X_test):
             max_iter=1000
         )
 
-        # 交叉验证评估
         cv_scores = cross_val_score(model, X_resampled_scaled, y_resampled, cv=5, scoring='roc_auc')
-        print(f"模型 {i+1} 的 5 折 AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
+        print(f"Model {i+1} AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
 
-        # 模型训练 + 测试集预测
         model.fit(X_resampled_scaled, y_resampled)
         proba = model.predict_proba(X_test_scaled)[:, 1]
 
@@ -287,19 +251,16 @@ def train_random_forest_models(subsets, X_test):
     models = []
 
     for i, (X_train, y_train) in enumerate(subsets):
-        print(f"\n训练 Random Forest 模型 {i+1}(default params)")
+        print(f"\nTrain Random Forest Model {i+1}(default params)")
 
-        # 构建模型（默认参数）
         model = RandomForestClassifier(
             random_state=42,
             n_jobs=-1
         )
 
-        # 交叉验证（5折 AUC-ROC）
         cv_scores = cross_val_score(model, X_train, y_train, cv=5, scoring='roc_auc')
-        print(f"模型 {i+1} AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
+        print(f"Model {i+1} AUC-ROC: {cv_scores.mean():.4f} (±{cv_scores.std():.4f})")
 
-        # 训练模型 + 在测试集上预测概率
         model.fit(X_train, y_train)
         proba = model.predict_proba(X_test)[:, 1]
 
@@ -311,13 +272,12 @@ def train_random_forest_models(subsets, X_test):
 
 # general
 def majority_vote_from_probs(prob_list, threshold=0.5):
-    # 把概率转为 0/1
+    # p to 0/1
     binary_preds = [pred > threshold for pred in prob_list]
 
-    # 求每个样本在3个模型中的平均预测（0～1）
     avg_preds = np.mean(binary_preds, axis=0)
 
-    # 多数投票（0.5 以上为 1）
+    # majority vote
     final_preds = np.round(avg_preds).astype(int)
 
     return final_preds
@@ -331,14 +291,11 @@ def shap_summary_ensemble(models, X_test, output_dir="output"):
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(X_test, check_additivity=False)
 
-        # 如果是 binary 分类，取 class 1 的 shap 值
         if isinstance(shap_values, list):
             shap_values = shap_values[1]
 
         shap_values_list.append(shap_values)
 
-
-    # 对多个 shap_values 取平均
     shap_values_avg = np.mean(np.array(shap_values_list), axis=0)
 
     os.makedirs(output_dir, exist_ok=True)
