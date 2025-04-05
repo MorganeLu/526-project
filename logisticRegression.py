@@ -24,38 +24,39 @@ print("Logistic Regression AUC-ROC:", roc_auc_score(y_test, avg_proba))
 feature_names = subsets[0][0].columns
 utils.print_param_lr(lr_models[0], feature_names)
 
-utils.plot_confusion_matrix(y_test, final_preds, model_name="logisticRegression")
+# utils.plot_confusion_matrix(y_test, final_preds, model_name="logisticRegression")
+
+# SMOTE with L2
+lr_models, lr_scalers, lr_test_preds = models.train_logistic_models_with_smote(subsets, X_test)
+final_preds = models.majority_vote_from_probs(lr_test_preds)
+avg_proba = np.mean(lr_test_preds, axis=0)
+print(classification_report(y_test, final_preds))
+print("Logistic Regression with SMOTE AUC-ROC:", roc_auc_score(y_test, avg_proba))
 
 
+# hyperparam tuning
+print("\n\n================================Start Tuning=================================")
 # with L1
-# l1_models, l1_scalers, l1_test_preds = models.train_logistic_l1_models_tune(subsets, X_test)
-# final_preds_l1 = models.majority_vote_from_probs(l1_test_preds)
-# avg_proba_l1 = np.mean(l1_test_preds, axis=0)
-# print(" L1 Reg Evaluation:")
-# print(classification_report(y_test, final_preds_l1))
-# print("Logistic Regression with L1 AUC-ROC:", roc_auc_score(y_test, avg_proba_l1))
+print("--> Tune model with L1")
+l1_models, l1_scalers, l1_test_preds = models.train_logistic_l1_models_tune(subsets, X_test)
+final_preds_l1 = models.majority_vote_from_probs(l1_test_preds)
+avg_proba_l1 = np.mean(l1_test_preds, axis=0)
+print(" L1 Reg Evaluation:")
+print(classification_report(y_test, final_preds_l1))
+print("Logistic Regression with L1 AUC-ROC:", roc_auc_score(y_test, avg_proba_l1))
 
-# feature_names = subsets[0][0].columns
-# utils.print_param_lr(l1_models[0], feature_names)
-
-
-# # with L2
-# l2_models, l2_scalers, l2_test_preds = models.train_logistic_l2_models_tune(subsets, X_test)
-# final_preds_l2 = models.majority_vote_from_probs(l2_test_preds)
-# avg_proba_l2 = np.mean(l2_test_preds, axis=0)
-# print(" L2 Reg Evaluation:")
-# print(classification_report(y_test, final_preds_l2))
-# print("Logistic Regression with L2 AUC-ROC:", roc_auc_score(y_test, avg_proba_l2))
+feature_names = subsets[0][0].columns
+utils.print_param_lr(l1_models[0], feature_names)
 
 
-# # SMOTE with L2
-# lr_models, lr_scalers, lr_test_preds = models.train_logistic_models_with_smote(subsets, X_test)
-# final_preds = models.majority_vote_from_probs(lr_test_preds)
-# avg_proba = np.mean(lr_test_preds, axis=0)
-
-# print(classification_report(y_test, final_preds))
-# print("Logistic Regression with SMOTE AUC-ROC:", roc_auc_score(y_test, avg_proba))
-
+# with L2
+print("--> Tune model with L2")
+l2_models, l2_scalers, l2_test_preds = models.train_logistic_l2_models_tune(subsets, X_test)
+final_preds_l2 = models.majority_vote_from_probs(l2_test_preds)
+avg_proba_l2 = np.mean(l2_test_preds, axis=0)
+print(" L2 Reg Evaluation:")
+print(classification_report(y_test, final_preds_l2))
+print("Logistic Regression with L2 AUC-ROC:", roc_auc_score(y_test, avg_proba_l2))
 
 
 

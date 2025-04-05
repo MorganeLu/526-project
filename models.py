@@ -29,7 +29,8 @@ def train_lightgbm_models(subsets, X_test):
             learning_rate=0.1,
             max_depth=7,
             num_leaves=31,
-            objective="binary"
+            objective="binary",
+            verbose=-1
         )
 
         # 5-fold CV
@@ -325,3 +326,34 @@ def shap_summary_ensemble(models, X_test, output_dir="output"):
     plt.close()
 
     print(f" SHAP summary saved to {output_dir}/")
+
+def shap_summary_ensemble_rf(rf_models, X_test, output_dir="output"):
+    os.makedirs(output_dir, exist_ok=True)
+
+    print("🔍 计算 SHAP 值中（Random Forest 集成模型）...")
+
+    # 每个模型计算 shap 值
+    shap_values_all = []
+    for i, model in enumerate(rf_models):
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_test)[1]  # 取正类
+        shap_values_all.append(shap_values)
+
+    # 取平均 SHAP 值（或者你可以选择 max/median）
+    mean_shap_values = np.mean(shap_values_all, axis=0)
+
+    # summary plot（点图）
+    plt.figure()
+    shap.summary_plot(mean_shap_values, X_test, show=False, max_display=20)
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/rf_shap_summary.png")
+    plt.close()
+
+    # bar plot（条形图）
+    plt.figure()
+    shap.summary_plot(mean_shap_values, X_test, plot_type="bar", show=False, max_display=20)
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/rf_shap_feature_importance.png")
+    plt.close()
+
+    print(f"✅ SHAP 图已保存到 {output_dir}/")

@@ -1,0 +1,113 @@
+=================================Start loading data============================
+Subset 1: (20000, 9), (20000,)
+Subset 2: (19276, 9), (19276,)
+Subset 3: (18465, 9), (18465,)
+
+ Training L2 Logistic Regression Model 1...
+ Model 1 5-fold AUC-ROC: 0.7148 (±0.0054)
+
+ Training L2 Logistic Regression Model 2...
+ Model 2 5-fold AUC-ROC: 0.7214 (±0.0085)
+
+ Training L2 Logistic Regression Model 3...
+ Model 3 5-fold AUC-ROC: 0.7230 (±0.0066)
+              precision    recall  f1-score   support
+
+           0       0.73      0.89      0.80     38624
+           1       0.56      0.30      0.39     18456
+
+    accuracy                           0.70     57080
+   macro avg       0.64      0.59      0.59     57080
+weighted avg       0.67      0.70      0.67     57080
+
+Logistic Regression AUC-ROC: 0.7177291540019137
+模型系数：
+country_of_birth: 0.0943
+gender: -0.0013
+FEIN: 0.8717
+ben_multi_reg_ind: -0.0647
+is_foreign_national: -0.0489
+age: -0.0880
+state_1: -0.0251
+state_2: -0.0763
+state_3: 0.0034
+
+Training L2 Logistic Regression Model 1 with SMOTE
+Model 1 AUC-ROC: 0.7191 (±0.0087)
+
+Training L2 Logistic Regression Model 2 with SMOTE
+Model 2 AUC-ROC: 0.7252 (±0.0066)
+
+Training L2 Logistic Regression Model 3 with SMOTE
+Model 3 AUC-ROC: 0.7269 (±0.0052)
+              precision    recall  f1-score   support
+
+           0       0.80      0.67      0.73     38624
+           1       0.49      0.66      0.56     18456
+
+    accuracy                           0.66     57080
+   macro avg       0.64      0.66      0.64     57080
+weighted avg       0.70      0.66      0.67     57080
+
+Logistic Regression with SMOTE AUC-ROC: 0.7172305656308706
+
+
+================================Start Tuning=================================
+--> Tune model with L1
+
+Training L1 Logistic Regression Model1 with tune
+best lamda: {'C': 10}
+best AUC-ROC: 0.7148
+
+Training L1 Logistic Regression Model2 with tune
+best lamda: {'C': 0.1}
+best AUC-ROC: 0.7215
+
+Training L1 Logistic Regression Model3 with tune
+best lamda: {'C': 0.1}
+best AUC-ROC: 0.7231
+ L1 Reg Evaluation:
+              precision    recall  f1-score   support
+
+           0       0.73      0.89      0.80     38624
+           1       0.56      0.30      0.39     18456
+
+    accuracy                           0.70     57080
+   macro avg       0.64      0.59      0.59     57080
+weighted avg       0.67      0.70      0.67     57080
+
+Logistic Regression with L1 AUC-ROC: 0.7177546518473459
+模型系数：
+country_of_birth: 0.0943
+gender: -0.0013
+FEIN: 0.8721
+ben_multi_reg_ind: -0.0646
+is_foreign_national: -0.0489
+age: -0.0880
+state_1: -0.0252
+state_2: -0.0764
+state_3: 0.0034
+--> Tune model with L2
+
+Training L2 Logistic Regression Model 1 with tune
+Best params: {'C': 100}
+Best AUC-ROC: 0.7148
+
+Training L2 Logistic Regression Model 2 with tune
+Best params: {'C': 0.1}
+Best AUC-ROC: 0.7214
+
+Training L2 Logistic Regression Model 3 with tune
+Best params: {'C': 0.01}
+Best AUC-ROC: 0.7230
+ L2 Reg Evaluation:
+              precision    recall  f1-score   support
+
+           0       0.73      0.89      0.80     38624
+           1       0.56      0.30      0.39     18456
+
+    accuracy                           0.70     57080
+   macro avg       0.64      0.59      0.59     57080
+weighted avg       0.67      0.70      0.67     57080
+
+Logistic Regression with L2 AUC-ROC: 0.7177270595761199

@@ -25,50 +25,51 @@ print("\nLightGB final evalution")
 print(classification_report(y_test, final_preds))
 print("AUC-ROC:", roc_auc_score(y_test, avg_proba))
 
-utils.plot_confusion_matrix(y_test, final_preds, model_name="LightGB")
+# utils.plot_confusion_matrix(y_test, final_preds, model_name="LightGB")
 
 
-# param tuning
-# param_grid = [
-#     {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 7},
-#     {"n_estimators": 200, "learning_rate": 0.05, "max_depth": 10},
-#     {"n_estimators": 300, "learning_rate": 0.03, "max_depth": 12},
-#     {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 7, "class_weight": "balanced"},
-# ]
+# hyperparam tuning
+print("\n\n================================Start Tuning=================================")
+param_grid = [
+    {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 7},
+    {"n_estimators": 200, "learning_rate": 0.05, "max_depth": 10},
+    {"n_estimators": 300, "learning_rate": 0.03, "max_depth": 12},
+    {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 7, "class_weight": "balanced"},
+]
 
-# def tune_lightgbm(subsets, X_test, y_test, param_grid):
-#     results = []
+def tune_lightgbm(subsets, X_test, y_test, param_grid):
+    results = []
 
-#     for i, params in enumerate(param_grid):
-#         print(f"\nTry hyper params in round {i+1}: {params}")
+    for i, params in enumerate(param_grid):
+        print(f"\nTry hyper params in round {i+1}: {params}")
 
-#         test_preds = []
-#         models_list = []
+        test_preds = []
+        models_list = []
 
-#         for j, (X_train, y_train) in enumerate(subsets):
-#             model = lgb.LGBMClassifier(**params, random_state=42)
-#             model.fit(X_train, y_train)
-#             proba = model.predict_proba(X_test)[:, 1]
-#             test_preds.append(proba)
-#             models_list.append(model)
+        for j, (X_train, y_train) in enumerate(subsets):
+            model = lgb.LGBMClassifier(**params, random_state=42)
+            model.fit(X_train, y_train)
+            proba = model.predict_proba(X_test)[:, 1]
+            test_preds.append(proba)
+            models_list.append(model)
 
-#         final_preds = models.majority_vote_from_probs(test_preds)
-#         avg_proba = np.mean(test_preds, axis=0)
+        final_preds = models.majority_vote_from_probs(test_preds)
+        avg_proba = np.mean(test_preds, axis=0)
 
-#         auc = roc_auc_score(y_test, avg_proba)
-#         print(f"AUC-ROC: {auc:.4f}")
-#         print(classification_report(y_test, final_preds))
+        auc = roc_auc_score(y_test, avg_proba)
+        print(f"AUC-ROC: {auc:.4f}")
+        print(classification_report(y_test, final_preds))
 
-#         results.append({
-#             "params": params,
-#             "auc": auc
-#         })
+        results.append({
+            "params": params,
+            "auc": auc
+        })
 
-#     print("\nAll results：")
-#     sorted_results = sorted(results, key=lambda x: x["auc"], reverse=True)
-#     for item in sorted_results:
-#         print(f"AUC={item['auc']:.4f} -> {item['params']}")
+    print("\nAll results:")
+    sorted_results = sorted(results, key=lambda x: x["auc"], reverse=True)
+    for item in sorted_results:
+        print(f"AUC={item['auc']:.4f} -> {item['params']}")
 
-#     return sorted_results
+    return sorted_results
 
-# best_results = tune_lightgbm(subsets, X_test, y_test, param_grid)
+best_results = tune_lightgbm(subsets, X_test, y_test, param_grid)
