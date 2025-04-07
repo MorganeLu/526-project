@@ -72,3 +72,6 @@ param_grid = [
 ]
 
 best_rf_results = tune_random_forest(subsets, X_test, y_test, param_grid)
+
+
+utils.plot_auc_results(best_rf_results)

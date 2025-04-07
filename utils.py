@@ -99,7 +99,7 @@ def print_param_lr(model, feature_names=None):
     if feature_names is None:
         feature_names = [f"Feature_{i}" for i in range(len(coef))]
 
-    print("模型系数：")
+    print("Model Params:")
     for name, weight in zip(feature_names, coef):
         print(f"{name}: {weight:.4f}")
 
@@ -120,3 +120,25 @@ def plot_confusion_matrix(y_true, y_pred, model_name="Model", output_dir="output
     plt.close()
 
     print(f"Confusion matrix saved to: {output_path}")
+
+def plot_auc_results(results):
+    results = sorted(results, key=lambda x: x['params']['n_estimators'], reverse=True)
+    print(results)
+
+    labels = [str(item['params']['n_estimators']) for item in results]
+    aucs = [item['auc'] for item in results]
+
+    plt.figure(figsize=(10, 6))
+    bars = plt.barh(range(len(aucs)), aucs)
+    plt.xlabel('AUC Score')
+    plt.title('Random Forest Hyperparameter Tuning Results')
+    plt.yticks(range(len(labels)), [f"n_estimators = {label}" for label in labels])
+
+    for i, bar in enumerate(bars):
+        plt.text(bar.get_width() + 0.001, bar.get_y() + bar.get_height()/2, f"{aucs[i]:.4f}", va='center')
+
+    plt.tight_layout()
+    output_dir = "output/"
+    output_path = os.path.join(output_dir, f"randomForest_tuning.png")
+    plt.savefig(output_path)
+    plt.show()
