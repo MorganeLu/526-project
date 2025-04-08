@@ -157,8 +157,8 @@ if __name__ == "__main__":
             'FIRST_DECISION': lambda x: 1 if str(x).lower() == 'approved' else 0,
             'gender': lambda x: 1 if str(x).lower() == 'female' else 0
         },
-        freq_encode_cols=['country_of_birth', 'FEIN'],
-        target_encode_cols=[]
+        freq_encode_cols=['country_of_birth'],
+        target_encode_cols=['FEIN']
     )
 
     preprocessor.fit(df)  # Encoding Mapping with train
@@ -171,5 +171,5 @@ if __name__ == "__main__":
     # print((df_train_processed['is_foreign_national']==1).sum())
     # print((df_test_processed['is_foreign_national']==1).sum())
 
-    df_train_processed.to_csv("21-22_TEST.csv")
-    df_test_processed.to_csv("23_TEST.csv")
+    df_train_processed.to_csv("21-22.csv")
+    df_test_processed.to_csv("23.csv")
